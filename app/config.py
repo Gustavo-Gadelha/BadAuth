@@ -11,5 +11,5 @@ class Config:
     OPENAPI_VERSION = '3.1.1'
     OPENAPI_URL_PREFIX = '/api/v1'
     OPENAPI_SWAGGER_UI_PATH = '/docs'
-    OPENAPI_SWAGGER_UI_URL = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist'
+    OPENAPI_SWAGGER_UI_URL = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist/'
     

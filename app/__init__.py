@@ -15,6 +15,7 @@ def create_app() -> Flask:
 
     from app import routes
     api.register_blueprint(routes.auth)
-    app.add_url_rule('/', redirect_to='/api/v1/docs')
+
+    app.add_url_rule('/', endpoint='index', view_func=lambda: redirect('/api/v1/docs'))
 
     return app
