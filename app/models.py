@@ -10,7 +10,7 @@ class User:
     doc_number: str
     username: str
     password: str
-    logged_in: bool
+    logged_in: bool = False
     created_at: date = field(default_factory=date.today)
     updated_at: date = field(default_factory=date.today)
 

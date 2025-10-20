@@ -1,4 +1,5 @@
 from flask import Flask, redirect
+from flask_injector import FlaskInjector
 from flask_smorest import Api
 
 
@@ -9,6 +10,9 @@ def create_app() -> Flask:
     app.config.from_object(Config)
 
     api = Api(app)
+
+    from app import injector
+    FlaskInjector(app, modules=[injector.SqliteModule()])
 
     from app import database
     database.create_all()
