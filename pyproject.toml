@@ -1,0 +1,11 @@
+[project]
+name = "bad-auth"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "flask>=3.1.2",
+    "flask-smorest>=0.46.2",
+    "marshmallow>=4.0.1",
+]
