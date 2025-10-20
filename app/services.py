@@ -1,13 +1,8 @@
 # services.py
-from __future__ import annotations
-
 import base64
-from typing import TYPE_CHECKING
+import sqlite3
 
-if TYPE_CHECKING:
-    import sqlite3
-
-    from app.models import User
+from app.models import User
 
 
 class UserService:
