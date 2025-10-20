@@ -16,7 +16,7 @@ class RecuperarSenhaSchema(Schema):
 class TokenSchema(Schema):
     user_id = fields.Int(dump_only=True)
     token = fields.Str(required=True)
-    created_at = fields.Date(format="iso")
+    created_at = fields.Date(format='iso')
 
 
 class UserSchema(Schema):
@@ -27,5 +27,5 @@ class UserSchema(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True)
     logged_in = fields.Bool()
-    created_at = fields.Date(format="iso")
-    updated_at = fields.Date(format="iso")
+    created_at = fields.Date(format='iso')
+    updated_at = fields.Date(format='iso')

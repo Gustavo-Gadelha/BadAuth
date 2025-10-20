@@ -1,28 +1,28 @@
 from flask_smorest import Blueprint
 
-auth = Blueprint("auth", __name__, url_prefix="/auth")
+auth = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-@auth.route("/signup", methods=["POST"])
+@auth.route('/signup', methods=['POST'])
 def signup():
     pass
 
 
-@auth.route("/login", methods=["POST"])
+@auth.route('/login', methods=['POST'])
 def login():
     pass
 
 
-@auth.route("/recuperar-senha", methods=["POST"])
+@auth.route('/recuperar-senha', methods=['POST'])
 def recuperar_senha():
     pass
 
 
-@auth.route("/logout", methods=["POST"])
+@auth.route('/logout', methods=['POST'])
 def logout():
     pass
 
 
-@auth.route("/me", methods=["POST"])
+@auth.route('/me', methods=['POST'])
 def me():
     pass
