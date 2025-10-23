@@ -1,14 +1,10 @@
 # services.py
 import base64
-import sqlite3
 
 from app.models import User
 
 
 class UserService:
-    def __init__(self, db: sqlite3.Connection):
-        self._db = db
-
     def user_exists(self, username: str, email: str, doc_number: str):
         pass
 
