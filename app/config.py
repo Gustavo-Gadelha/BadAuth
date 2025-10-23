@@ -4,6 +4,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SQLITE_PATH = BASE_DIR / 'sqlite3.db'
 SCHEMA_PATH = BASE_DIR / 'schema.sql'
 
+CONNECTION_KEY = 'con'
+
 
 class Config:
     API_TITLE = 'BadAuth API'

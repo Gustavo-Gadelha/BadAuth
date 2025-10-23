@@ -3,20 +3,20 @@ from datetime import date
 
 from flask import Flask, g
 
-from app.config import SCHEMA_PATH, SQLITE_PATH
+from app.config import CONNECTION_KEY, SCHEMA_PATH, SQLITE_PATH
 
 sqlite3.register_adapter(date, lambda date: date.isoformat())
 sqlite3.register_converter('DATE', lambda b: date.fromisoformat(b.decode()))
 
 
-def init_database(app: Flask) -> None:
+def init_app(app: Flask) -> None:
     app.teardown_appcontext(close_connection)
     with app.app_context():
         create_all()
 
 
 def get_connection(path=SQLITE_PATH) -> sqlite3.Connection:
-    if 'con' not in g:
+    if CONNECTION_KEY not in g:
         g.con = sqlite3.connect(path)
         g.con.row_factory = sqlite3.Row
 
@@ -24,7 +24,7 @@ def get_connection(path=SQLITE_PATH) -> sqlite3.Connection:
 
 
 def close_connection(exception):
-    con = g.pop('con', None)
+    con = g.pop(CONNECTION_KEY, None)
     if con is not None:
         con.close()
 

@@ -11,7 +11,7 @@ def create_app() -> Flask:
     api = Api(app)
 
     from app import database
-    database.create_all()
+    database.init_app(app)
 
     from app import routes
     api.register_blueprint(routes.auth)
