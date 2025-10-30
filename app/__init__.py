@@ -1,8 +1,8 @@
 from flask import Flask, redirect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from werkzeug.exceptions import HTTPException
 from flask_smorest import Api
+from werkzeug.exceptions import HTTPException
 
 from app.database import Database
 
