@@ -6,9 +6,6 @@ from flask import Flask, g
 
 from app.config import SCHEMA_PATH, SQLITE_PATH
 
-sqlite3.register_adapter(date, lambda date: date.isoformat())
-sqlite3.register_converter('DATE', lambda b: date.fromisoformat(b.decode()))
-
 
 class Database:
     def __init__(
