@@ -86,7 +86,7 @@ class UserService:
         row = db.fetch_one(sql, (document, email))
 
         if row is None:
-            raise NotFound('Usuário não encontrado com os dados fornecidos')
+            raise NotFound('Usuário não encontrado')
 
         user = dict(row)
 
