@@ -11,7 +11,12 @@ from app.database import Database
 db = Database()
 api = Api()
 fernet = Fernet(TOKEN_KEY)
-limiter = Limiter(get_remote_address)
+limiter = Limiter(
+    get_remote_address,
+    storage_uri="redis://localhost:6379",
+    storage_options={"socket_connect_timeout": 30},
+    strategy="fixed-window", 
+    )
 
 
 def create_app() -> Flask:
