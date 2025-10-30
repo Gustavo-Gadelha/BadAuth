@@ -4,8 +4,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SQLITE_PATH = BASE_DIR / 'sqlite3.db'
 SCHEMA_PATH = BASE_DIR / 'schema.sql'
 
-CONNECTION_KEY = 'con'
-
 
 class Config:
     API_TITLE = 'BadAuth API'
@@ -14,3 +12,8 @@ class Config:
     OPENAPI_URL_PREFIX = '/api/v1'
     OPENAPI_SWAGGER_UI_PATH = '/docs'
     OPENAPI_SWAGGER_UI_URL = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist/'
+
+    API_SPEC_OPTIONS = {
+        'security': [{'authToken': []}],
+        'components': {'securitySchemes': {'authToken': {'type': 'apiKey', 'in': 'header', 'name': 'Authorization'}}},
+    }
