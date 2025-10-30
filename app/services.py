@@ -1,11 +1,10 @@
 # services.py
-import base64
 import json
 from typing import Any
 
 from werkzeug.exceptions import BadRequest, NotFound, Unauthorized
 
-from app import db
+from app import db, fernet
 
 
 class UserService:
@@ -21,7 +20,7 @@ class UserService:
 
     def create_user(self, schema: dict[str, Any]):
         if self.user_exists(schema['email'], schema['doc_number']):
-            raise BadRequest('Usuário com este nome, email ou documento já existe')
+            raise BadRequest('Usuário com este email ou documento já existe')
 
         sql = """
             INSERT INTO users (full_name, email, doc_number, username, password)
@@ -37,9 +36,9 @@ class UserService:
 
         return self.generate_token(dict(user))
 
-    def login(self, username: str, password: str):
-        sql = 'SELECT * FROM users WHERE username = :username;'
-        row = db.fetch_one(sql, {'username': username})
+    def login(self, email: str, password: str):
+        sql = 'SELECT * FROM users WHERE email = :email;'
+        row = db.fetch_one(sql, {'email': email})
         if row is None:
             raise Unauthorized('Credenciais incorretas')
 
@@ -96,9 +95,8 @@ class UserService:
 
     def generate_token(self, user: dict[str, Any]):
         data = {'email': user['email'], 'doc_number': user['doc_number']}
-
-        raw_bytes = json.dumps(data).encode('utf-8')
-        token = base64.urlsafe_b64encode(raw_bytes).decode('utf-8')
+        raw_bytes = json.dumps(data).encode()
+        token = fernet.encrypt(raw_bytes).decode()
 
         sql = """
             SELECT 1 

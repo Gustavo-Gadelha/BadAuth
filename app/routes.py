@@ -25,9 +25,9 @@ def signup(schema):
 @auth.response(200, TokenSchema)
 @auth.alt_response(400)
 def login(schema):
-    login = schema.get('login')
+    email = schema.get('email')
     password = schema.get('password')
-    token = user_service.login(login, password)
+    token = user_service.login(email, password)
     return {'token': token}, 200
 
 

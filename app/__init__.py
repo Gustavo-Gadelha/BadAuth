@@ -1,13 +1,16 @@
+from cryptography.fernet import Fernet
 from flask import Flask, redirect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_smorest import Api
 from werkzeug.exceptions import HTTPException
 
+from app.config import TOKEN_KEY
 from app.database import Database
 
 db = Database()
 api = Api()
+fernet = Fernet(TOKEN_KEY)
 limiter = Limiter(get_remote_address)
 
 
