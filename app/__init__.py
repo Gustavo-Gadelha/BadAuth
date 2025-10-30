@@ -27,10 +27,8 @@ def create_app() -> Flask:
     from app import routes
 
     api.register_blueprint(routes.auth)
-    app.add_url_rule('/', endpoint='index', view_func=lambda: redirect('/api/v1/docs'))
 
-    @app.errorhandler(HTTPException)  # type: ignore
-    def handle_exception(e: HTTPException):
-        return {'message': e.description}, e.code
+    app.add_url_rule('/', endpoint='index', view_func=lambda: redirect('/api/v1/docs'))
+    app.register_error_handler(HTTPException, lambda e: ({'message': e.description}, e.code))
 
     return app
