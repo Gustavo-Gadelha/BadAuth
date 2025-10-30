@@ -1,7 +1,6 @@
-import limits
 from flask import request
 from flask_smorest import Blueprint
-from werkzeug.exceptions import BadRequest, TooManyRequests
+from werkzeug.exceptions import BadRequest
 
 from app import limiter
 from app.schemas import LoginSchema, RecoverPasswordSchema, TokenSchema, UserSchema
@@ -21,6 +20,7 @@ def signup(schema):
 
 
 @auth.route('/login', methods=['POST'])
+@limiter.limit('3 per 10 minutes')
 @auth.arguments(LoginSchema, location='json')
 @auth.response(200, TokenSchema)
 @auth.alt_response(400)
@@ -55,6 +55,7 @@ def recuperar_senha(schema):
 
 
 @auth.route('/me', methods=['GET'])
+@limiter.limit('3 per 10 minutes')
 @auth.response(200, UserSchema)
 @auth.alt_response(401)
 def me():
