@@ -7,8 +7,6 @@ from app import limiter
 from app.schemas import LoginSchema, RecoverPasswordSchema, TokenSchema, UserSchema
 from app.services import UserService
 
-three_per_ten_minutes = limits.parse('3 per 10 minutes')
-
 auth = Blueprint('auth', __name__, url_prefix='/auth')
 user_service = UserService.instance()
 
@@ -27,9 +25,6 @@ def signup(schema):
 @auth.response(200, TokenSchema)
 @auth.alt_response(400)
 def login(schema):
-    if not limiter.hit(three_per_ten_minutes, str(request.remote_addr)):
-        return TooManyRequests('Limite de requisições atingido, tente novamente em 10 minutos'), 400
-
     login = schema.get('login')
     password = schema.get('password')
     token = user_service.login(login, password)
@@ -38,11 +33,11 @@ def login(schema):
 
 @auth.route('/logout', methods=['POST'])
 @auth.response(200)
-@auth.alt_response(400)
+@auth.alt_response(401)
 def logout():
     token = request.headers.get('Authorization')
     if token is None:
-        return BadRequest('Token de autenticação é obrigatório'), 400
+        return BadRequest('Token de autenticação é obrigatório'), 401
 
     return user_service.logout(token)
 
@@ -61,10 +56,10 @@ def recuperar_senha(schema):
 
 @auth.route('/me', methods=['GET'])
 @auth.response(200, UserSchema)
-@auth.alt_response(404)
+@auth.alt_response(401)
 def me():
     token = request.headers.get('Authorization')
     if token is None:
-        return BadRequest('Token de autenticação é obrigatório'), 400
+        return BadRequest('Token de autenticação é obrigatório'), 401
 
     return user_service.get_current_user(token), 200
