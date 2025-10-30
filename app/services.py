@@ -90,12 +90,12 @@ class UserService:
 
         user = dict(row)
 
-        update_sql = """
+        sql = """
             UPDATE users
             SET password = ?
             WHERE id = ?;
         """
-        db.execute(update_sql, (new_password, user['id']))
+        db.execute(sql, (new_password, user['id']))
 
         return self.generate_token(user)
 
@@ -104,19 +104,19 @@ class UserService:
         raw_bytes = json.dumps(data).encode()
         token = fernet.encrypt(raw_bytes).decode()
 
-        exists_sql = """
+        sql = """
             SELECT 1
             FROM tokens
             WHERE token = ?;
         """
 
-        if db.fetch_one(exists_sql, (token,)):
+        if db.fetch_one(sql, (token,)):
             return token
 
-        insert_sql = """
+        sql = """
             INSERT INTO tokens (token, user_id)
             VALUES (?, ?);
         """
-        db.execute(insert_sql, (token, user['id']))
+        db.execute(sql, (token, user['id']))
 
         return token
