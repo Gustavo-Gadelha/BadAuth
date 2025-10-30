@@ -9,15 +9,6 @@ from app import db
 
 
 class UserService:
-    _db = db
-    _instance = None
-
-    @classmethod
-    def instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-
     def user_exists(self, email: str, doc_number: str):
         sql = """
             SELECT 1
@@ -25,7 +16,7 @@ class UserService:
             WHERE email = ? OR doc_number = ?
             LIMIT 1;
         """
-        row = self._db.fetch_one(sql, (email, doc_number))
+        row = db.fetch_one(sql, (email, doc_number))
         return row is not None
 
     def create_user(self, schema: dict[str, Any]):
@@ -37,10 +28,10 @@ class UserService:
             VALUES (:full_name, :email, :doc_number, :username, :password);
         """
 
-        user_id = self._db.execute(sql, schema)
+        user_id = db.execute(sql, schema)
 
         sql = 'SELECT * FROM users WHERE id = :user_id;'
-        user = self._db.fetch_one(sql, {'user_id': user_id})
+        user = db.fetch_one(sql, {'user_id': user_id})
         if user is None:
             raise NotFound('Usuário não encontrado após criação')
 
@@ -48,7 +39,7 @@ class UserService:
 
     def login(self, username: str, password: str):
         sql = 'SELECT * FROM users WHERE username = :username;'
-        row = self._db.fetch_one(sql, {'username': username})
+        row = db.fetch_one(sql, {'username': username})
         if row is None:
             raise Unauthorized('Credenciais incorretas')
 
@@ -62,12 +53,12 @@ class UserService:
             WHERE id = :user_id;
         """
 
-        self._db.execute(sql, {'user_id': user['id']})
+        db.execute(sql, {'user_id': user['id']})
         return self.generate_token(user['id'])
 
     def logout(self, token: str):
         sql = 'DELETE FROM tokens WHERE token = :token;'
-        self._db.execute(sql, {'token': token})
+        db.execute(sql, {'token': token})
 
     def get_current_user(self, token: str):
         sql = """
@@ -76,7 +67,7 @@ class UserService:
             WHERE t.token = :token;
         """
 
-        row = self._db.fetch_one(sql, {'token': token})
+        row = db.fetch_one(sql, {'token': token})
         if row is None:
             raise NotFound('Usuário não encontrado')
 
@@ -88,7 +79,7 @@ class UserService:
             WHERE doc_number = :document AND email = :email;
         """
 
-        row = self._db.fetch_one(sql, {'document': document, 'email': email})
+        row = db.fetch_one(sql, {'document': document, 'email': email})
         if row is None:
             raise NotFound('Usuário não encontrado com os dados fornecidos')
 
@@ -99,7 +90,7 @@ class UserService:
         """
 
         user = dict(row)
-        self._db.execute(sql, {'new_password': new_password, 'user_id': user['id']})
+        db.execute(sql, {'new_password': new_password, 'user_id': user['id']})
 
         return self.generate_token(user)
 
@@ -115,7 +106,7 @@ class UserService:
             WHERE t.token = :token;
         """
 
-        if self._db.fetch_one(sql, {'token': token}):
+        if db.fetch_one(sql, {'token': token}):
             return token
 
         sql = """
@@ -123,5 +114,5 @@ class UserService:
             VALUES (:token, :user_id);
         """
 
-        self._db.execute(sql, {'token': token, 'user_id': user['id']})
+        db.execute(sql, {'token': token, 'user_id': user['id']})
         return token

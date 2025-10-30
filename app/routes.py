@@ -7,7 +7,7 @@ from app.schemas import LoginSchema, RecoverPasswordSchema, TokenSchema, UserSch
 from app.services import UserService
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
-user_service = UserService.instance()
+user_service = UserService()
 
 
 @auth.route('/signup', methods=['POST'])
