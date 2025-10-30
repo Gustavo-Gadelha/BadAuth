@@ -1,10 +1,13 @@
+import limits
 from flask import request
 from flask_smorest import Blueprint
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, TooManyRequests
 
 from app import limiter
 from app.schemas import LoginSchema, RecoverPasswordSchema, TokenSchema, UserSchema
 from app.services import UserService
+
+three_per_ten_minutes = limits.parse('3 per 10 minutes')
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
 user_service = UserService.instance()
@@ -20,11 +23,13 @@ def signup(schema):
 
 
 @auth.route('/login', methods=['POST'])
-@limiter.limit('3 per 10 minutes')
 @auth.arguments(LoginSchema, location='json')
 @auth.response(200, TokenSchema)
 @auth.alt_response(400)
 def login(schema):
+    if not limiter.hit(three_per_ten_minutes, str(request.remote_addr)):
+        return TooManyRequests('Limite de requisições atingido, tente novamente em 10 minutos'), 400
+
     login = schema.get('login')
     password = schema.get('password')
     token = user_service.login(login, password)
