@@ -78,12 +78,18 @@ class UserService:
             raise NotFound('Usuário não encontrado')
         return user
 
-    def send_email(self):
-        print(secrets.token_urlsafe(16))
+    def send_email(self, code):
+        print(f'Sent email with recovery code: {code}')
 
-    def recover_password(self, document: str, email: str, new_password: str):
-        self.send_email()
+    async def verify_email(self, code):
+        return True
+    
+    async def recover_password(self, document: str, email: str, new_password: str):
+        code = secrets.token_urlsafe(16)
 
+        self.send_email(code)
+        await self.verify_email(code)
+    
         sql = """
             SELECT *
             FROM users
