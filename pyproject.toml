@@ -5,8 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "cryptography>=46.0.3",
     "flask>=3.1.2",
+    "flask-limiter[redis]>=4.0.0",
     "flask-smorest>=0.46.2",
-    "limits>=5.6.0",
     "marshmallow>=4.0.1",
 ]

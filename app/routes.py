@@ -1,16 +1,13 @@
-import limits
 from flask import request
 from flask_smorest import Blueprint
-from werkzeug.exceptions import BadRequest, TooManyRequests
+from werkzeug.exceptions import BadRequest
 
 from app import limiter
 from app.schemas import LoginSchema, RecoverPasswordSchema, TokenSchema, UserSchema
 from app.services import UserService
 
-three_per_ten_minutes = limits.parse('3 per 10 minutes')
-
 auth = Blueprint('auth', __name__, url_prefix='/auth')
-user_service = UserService.instance()
+user_service = UserService()
 
 
 @auth.route('/signup', methods=['POST'])
@@ -23,26 +20,24 @@ def signup(schema):
 
 
 @auth.route('/login', methods=['POST'])
+@limiter.limit('3 per 10 minutes')
 @auth.arguments(LoginSchema, location='json')
 @auth.response(200, TokenSchema)
 @auth.alt_response(400)
 def login(schema):
-    if not limiter.hit(three_per_ten_minutes, str(request.remote_addr)):
-        return TooManyRequests('Limite de requisições atingido, tente novamente em 10 minutos'), 400
-
-    login = schema.get('login')
+    email = schema.get('email')
     password = schema.get('password')
-    token = user_service.login(login, password)
+    token = user_service.login(email, password)
     return {'token': token}, 200
 
 
 @auth.route('/logout', methods=['POST'])
 @auth.response(200)
-@auth.alt_response(400)
+@auth.alt_response(401)
 def logout():
     token = request.headers.get('Authorization')
     if token is None:
-        return BadRequest('Token de autenticação é obrigatório'), 400
+        return BadRequest('Token de autenticação é obrigatório'), 401
 
     return user_service.logout(token)
 
@@ -60,11 +55,12 @@ def recuperar_senha(schema):
 
 
 @auth.route('/me', methods=['GET'])
+@limiter.limit('3 per 10 minutes')
 @auth.response(200, UserSchema)
-@auth.alt_response(404)
+@auth.alt_response(401)
 def me():
     token = request.headers.get('Authorization')
     if token is None:
-        return BadRequest('Token de autenticação é obrigatório'), 400
+        return BadRequest('Token de autenticação é obrigatório'), 401
 
     return user_service.get_current_user(token), 200

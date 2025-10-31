@@ -1,22 +1,29 @@
-# services.py
-import base64
 import json
+import secrets
 from typing import Any
 
 from werkzeug.exceptions import BadRequest, NotFound, Unauthorized
 
-from app import db
+from app import db, fernet
 
 
 class UserService:
-    _db = db
-    _instance = None
+    def get_user_by_email(self, email: str):
+        sql = """
+            SELECT * FROM users WHERE email = ?;
+        """
+        row = db.fetch_one(sql, (email,))
+        return dict(row) if row else None
 
-    @classmethod
-    def instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+    def get_user_by_token(self, token: str):
+        sql = """
+            SELECT u.*
+            FROM users u
+            JOIN tokens t ON u.id = t.user_id
+            WHERE t.token = ?;
+        """
+        row = db.fetch_one(sql, (token,))
+        return dict(row) if row else None
 
     def user_exists(self, email: str, doc_number: str):
         sql = """
@@ -25,103 +32,103 @@ class UserService:
             WHERE email = ? OR doc_number = ?
             LIMIT 1;
         """
-        row = self._db.fetch_one(sql, (email, doc_number))
+        row = db.fetch_one(sql, (email, doc_number))
         return row is not None
 
     def create_user(self, schema: dict[str, Any]):
         if self.user_exists(schema['email'], schema['doc_number']):
-            raise BadRequest('Usuário com este nome, email ou documento já existe')
+            raise BadRequest('Usuário com este email ou documento já existe')
 
         sql = """
             INSERT INTO users (full_name, email, doc_number, username, password)
             VALUES (:full_name, :email, :doc_number, :username, :password);
         """
+        user_id = db.execute(sql, schema)
 
-        user_id = self._db.execute(sql, schema)
-
-        sql = 'SELECT * FROM users WHERE id = :user_id;'
-        user = self._db.fetch_one(sql, {'user_id': user_id})
-        if user is None:
-            raise NotFound('Usuário não encontrado após criação')
-
-        return self.generate_token(dict(user))
-
-    def login(self, username: str, password: str):
-        sql = 'SELECT * FROM users WHERE username = :username;'
-        row = self._db.fetch_one(sql, {'username': username})
+        sql = 'SELECT * FROM users WHERE id = ?;'
+        row = db.fetch_one(sql, (user_id,))
         if row is None:
-            raise Unauthorized('Credenciais incorretas')
+            raise Exception('Erro ao criar usuário')
 
-        user = dict(row)
+        return self.generate_token(dict(row))
+
+    def login(self, email: str, password: str):
+        user = self.get_user_by_email(email)
+        if user is None:
+            raise Unauthorized('Credenciais incorretas')
         if user['password'] != password:
             raise Unauthorized('Credenciais incorretas')
 
         sql = """
             UPDATE users
             SET logged_in = 1
-            WHERE id = :user_id;
+            WHERE id = ?;
         """
+        db.execute(sql, (user['id'],))
 
-        self._db.execute(sql, {'user_id': user['id']})
-        return self.generate_token(user['id'])
+        return self.generate_token(user)
 
-    def logout(self, token: str):
-        sql = 'DELETE FROM tokens WHERE token = :token;'
-        self._db.execute(sql, {'token': token})
+    def logout(self, token: str) -> None:
+        sql = 'DELETE FROM tokens WHERE token = ?;'
+        db.execute(sql, (token,))
 
     def get_current_user(self, token: str):
-        sql = """
-            SELECT u.* FROM users u
-            JOIN tokens t ON u.id = t.user_id
-            WHERE t.token = :token;
-        """
+        user = self.get_user_by_token(token)
+        if user is None:
+            raise NotFound('Usuário não encontrado')
+        return user
 
-        row = self._db.fetch_one(sql, {'token': token})
+    def send_email(self, code):
+        print(f'Sent email with recovery code: {code}')
+
+    async def verify_email(self, code):
+        return True
+    
+    async def recover_password(self, document: str, email: str, new_password: str):
+        code = secrets.token_urlsafe(16)
+
+        self.send_email(code)
+        await self.verify_email(code)
+    
+        sql = """
+            SELECT *
+            FROM users
+            WHERE doc_number = ? AND email = ?;
+        """
+        row = db.fetch_one(sql, (document, email))
+
         if row is None:
             raise NotFound('Usuário não encontrado')
 
-        return dict(row)
-
-    def recover_password(self, document: str, email: str, new_password: str):
-        sql = """
-            SELECT * FROM users
-            WHERE doc_number = :document AND email = :email;
-        """
-
-        row = self._db.fetch_one(sql, {'document': document, 'email': email})
-        if row is None:
-            raise NotFound('Usuário não encontrado com os dados fornecidos')
+        user = dict(row)
 
         sql = """
             UPDATE users
-            SET password = :new_password
-            WHERE id = :user_id;
+            SET password = ?
+            WHERE id = ?;
         """
-
-        user = dict(row)
-        self._db.execute(sql, {'new_password': new_password, 'user_id': user['id']})
+        db.execute(sql, (new_password, user['id']))
 
         return self.generate_token(user)
 
     def generate_token(self, user: dict[str, Any]):
         data = {'email': user['email'], 'doc_number': user['doc_number']}
-
-        raw_bytes = json.dumps(data).encode('utf-8')
-        token = base64.urlsafe_b64encode(raw_bytes).decode('utf-8')
+        raw_bytes = json.dumps(data).encode()
+        token = fernet.encrypt(raw_bytes).decode()
 
         sql = """
-            SELECT 1 
-            FROM tokens t
-            WHERE t.token = :token;
+            SELECT 1
+            FROM tokens
+            WHERE token = ?;
         """
 
-        if self._db.fetch_one(sql, {'token': token}):
+        if db.fetch_one(sql, (token,)):
             return token
 
         sql = """
             INSERT INTO tokens (token, user_id)
-            VALUES (:token, :user_id);
+            VALUES (?, ?);
         """
+        db.execute(sql, (token, user['id']))
 
-        self._db.execute(sql, {'token': token, 'user_id': user['id']})
         return token
