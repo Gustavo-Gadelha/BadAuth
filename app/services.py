@@ -1,4 +1,5 @@
 import json
+import secrets
 from typing import Any
 
 from werkzeug.exceptions import BadRequest, NotFound, Unauthorized
@@ -77,7 +78,13 @@ class UserService:
             raise NotFound('Usuário não encontrado')
         return user
 
+    def send_email(self):
+
+        print(secrets.token_urlsafe(16))
+
     def recover_password(self, document: str, email: str, new_password: str):
+        self.send_email()
+
         sql = """
             SELECT *
             FROM users
