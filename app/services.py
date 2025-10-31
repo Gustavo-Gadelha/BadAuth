@@ -79,7 +79,6 @@ class UserService:
         return user
 
     def send_email(self):
-
         print(secrets.token_urlsafe(16))
 
     def recover_password(self, document: str, email: str, new_password: str):
